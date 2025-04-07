@@ -1,0 +1,47 @@
+After finding fringes, we can attempt to do astrometric VLBI. Since fast transients are point sources, our goal is simply to determine two parameters (the RA and Dec), which is substantially easier than VLBI imaging. However, all VLBI localizations of repeaters have been conducted by combining bursts detected with different hour angles. For single bursts, astrometry is known to be particularly difficult because of the limited $uv$ coverage. 
+
+The astrometry problem can be seen in two related ways. Intuitively, in delay space, by Fourier transforming the visibilities over the frequency axis, we can measure time delays, which in principle contain all of the information we are after. in practice this approach is limited because it requires being able to robustly detect the burst on at least two baselines individually. In visibility space, we can invert the visibilities into images using a model for the phase shifts from geometric and ionospheric effects. This approach takes the
+ionosphere into account but is more costly to evaluate. We have found that a hybrid of both methods converges well. First, we use a robust, delay-based localization analysis to provide a coarse initial guess, which gets sharpened by a more complete map-space analysis. 
+
+We denote the complex, calibrated visibilities as $\mathcal{V}_{bk}$ where $b$ refers to the baseline, and $k$ refers to the frequency channel, and the scatter in this measurement to be isotropically distributed around $\mathcal{V}_{bk}$ in the complex plane such that the variance of each (real and imaginary) component is $\sigma^2_{bk}/2$.
+
+\subsection{Delay-Space Localization}\label{sec:coarse_loc}
+In delay space, we Fourier transform the visibilities and find the highest peak of the delay cross-correlation function, fixing the integer delay to zero. We call $\tau_{max}$ the delay which maximizes $G(l=0,\tau)$. For a source whose spectrum is smooth on some characteristic frequency scale $\Delta \nu$, $G^d$ is sharply peaked at the true delay with a characteristic width $1/\Delta \nu$; this intrinsic Nyquist width is typically smaller than the systematic delay uncertainty for each baseline. Assuming the systematic delay errors are Gaussian, we can measure the residual delays on each baseline $\tau_{max}^b$, while taking into account the systematic delay uncertainties, by maximizing the Fourier transform of the visibilities at zero integer lag with the following expression for the likelihood. With uniform priors on the delay this likelihood is also the log posterior from which error ellipses can be calculated.
+
+\begin{equation}
+\log P(\vec{\lambda}|\mathcal{V}_{bk}) \propto \log\mathcal{L}_\tau = \sum_b \dfrac{(\tau_{max}^b - \tau^b(\hat{\mathbf{n}}))^2}{2\sigma_b^2} \label{eq:l_tau}
+\end{equation}
+
+If fringes from single bursts can be robustly detected on multiple baselines, we have found that the Equation~\ref{eq:l_tau} method is robust, since the posterior probability contour has a simple form and is not very multimodal especially in the few-baseline limit. It is therefore robust against bad correlator pointings: maximizing $\log\mathcal{L}_\tau$ over sky position will point us towards the true position as long as the detected peak is not an alias of a stronger peak at a
+different integer delay. The condition for this is that $|\tau_{max}^b| <
+\SI{1.28}{\micro\second}$, which corresponds to a allowed pointing tolerance of $\approx 17''$ for the longest (CHIME-GBO baseline), which can be iteratively be satisfied by using the shorter baselines to first obtain an initial guess.
+
+\subsection{Image-Space Localization}\label{sec:fine_loc}
+The drawback of the $\mathcal{L}_\tau$ method is that it requires detecting the burst on each baseline independently. Baselines are best combined in the image plane, where multiple sub-threshold detections can add coherently. To realize this sensitivity boost requires additional calibration of the overall phase over \SI{400}{\mega\hertz} bandwidth in addition to the non-dispersive and dispersive (i.e. ionospheric) delays. If the overall phase is calibrated out, the residual geometric and ionospheric contributions can be taken into account with a phase model, which can be expressed as
+\begin{equation} 
+    P_{bk} = \exp(2\pi i\nu_k \tau_{bk}(\hat{\mathbf{n}}) + i\kappa \rmtec_b / \nu_k).\label{eq:phase_model}
+\end{equation}
+
+By applying the phases over a grid of positions and residual dTEC values and summing the visibilities over frequencies and baselines, we can do brute-force ``imaging'' of the visibilities over an $\sim$arcsecond field of view (and a specified range in TEC values), e.g. once a better correlator pointing is established via $\mathcal{L}_\tau$. To get a sense for this, we phase and sum the visibilities using Eq.~\ref{eq:point_src_estimator} (compare with Eq. 10.7 in~\citet{thompson2017interferometry1}): 
+
+\begin{align}
+    \rho \propto \mathcal{L}_\varphi = \sum_{bk} \dfrac{|\mathcal{V}_{bk}|}{\sigma_{bk}^2}Re[\mathcal{V}_{bk}\overline{P}_{bk}]\label{eq:point_src_estimator}
+\end{align}
+
+In this equation we weight the visibilities by $|\mathcal{V}_{bk}| / \sigma_{bk}^2$, downweighting noisy channels and upweighting channels with more signal. The upweighting is quantified by the total visibility amplitude $|V|$, which works well when a single source dominates the visibilities. This is a good approximation for short integration times, where the source density on the sky is low. We do not explicitly weight baselines as a function of their length in either physical or wavelength-rescaled ($uv$) coordinates, although different
+weightings have been found to be beneficial when baselines greatly differ in sensitivity (see Sec 2.2 of~\citep{jackson2022sub}). In the limit that the signal-to-noise per visibility point (i.e. the signal per \SI{390}{\kilo\hertz} per baseline) is subdominant to the system temperature, maximizing Eq.~\ref{eq:point_src_estimator} over a range of positions and residual dTEC values (one per baseline) is equivalent to doing Bayesian parameter estimation on those parameters with a uniform prior on
+all of those parameters. Based on preliminary data from KKO, we find that the formal delay errors as estimated from our posterior are much smaller than the realistic systematic errors arising from calibration. Hence, while Eq.~\ref{eq:point_src_estimator} provides the most self-consistent astrometric \& ionosphere solution, the size of the final localization contour will likely be systematics-dominated. We leave a more comprehensive treatment for future work. 
+
+%However, we can get a sense for the astrometric precision of the full array assuming a realistic systematic error budget. We apply the delay-space method (Eq.~\ref{eq:l_tau}), assuming a systematic delay error of $\sigma_\tau = \SI{1}{\nano\second}$ for all baselines: the target specification for CHIME/FRB Outriggers. The ellipse contours are shown in Fig.~\ref{fig:psf_forecast}. We plot this on top of a realistic simulation of the point-spread function (PSF) for a mock observation of a Crab
+%giant pulse using the full CHIME Outriggers array (CHIME, KKO, GBO, and HCO) using Eq.~\ref{eq:point_src_estimator} fixing the residual dTEC to zero for all baselines, and normalizing the signal-to-noise ratio using a noise estimate estimated from the median absolute deviation sample over a $(\SI{50}{\arcsec})^2$ grid. In the top two panels we use visibilities from a Crab giant pulse detected on the CHIME-KKO baseline with a correlation S/N of 30. We apply delay and phase corrections to
+%self-calibrate the visibilities on each baseline to simulate an unbiased calibration of the data, but since we start with real visibilities, our PSF includes realistic contributions from RFI and the intrinsic spectral structure of the Crab pulse.
+%Actually achieving the direction-dependent phase and delay calibration itself is nontrivial and will be the subject of another paper. The fringe pattern corresponds to our Eq.~\ref{eq:point_src_estimator} and the delay-space method corresponds to Eq.~\ref{eq:l_tau}.
+
+%\begin{figure}
+%    \centering
+%    \includegraphics[width = 0.5\textwidth]{figs/crab_loc_full_array.pdf}
+%    \caption{Colored contours: The PSF of CHIME/FRB Outriggers calculated using Equation~\ref{eq:point_src_estimator}, when the TEC is held to zero. Ellipses: Systematic errors assuming $\sigma_{\tau} = \SI{1}{\nano\second}$ for each baseline.}
+%    \label{fig:psf_forecast}
+%\end{figure}
+
+

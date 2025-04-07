@@ -1,0 +1,245 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Trim Size : 11in x 8.5in
+%% Text Area : 9.6in (include Runningheads) x 7in
+%% ws-jai.tex, 26 April 2012
+%% Tex file to use with ws-jai.cls written in Latex2E.
+%% The content, structure, format and layout of this style file is the
+%% property of World Scientific Publishing Co. Pte. Ltd.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+
+
+%\documentclass[draft]{ws-jai}
+%\documentclass{ws-jai} For JAI
+\documentclass[twocolumn]{aastex631}
+%\usepackage[flushleft]{threeparttable}
+\usepackage{savesym}
+\usepackage{tipa} % for KKO full name rendering
+\savesymbol{tablenum}
+\usepackage{siunitx}
+\restoresymbol{SIX}{tablenum}
+\sisetup{
+    %binary-units,
+    range-phrase=\text{--},
+    range-units=single,
+    separate-uncertainty=true,
+    retain-explicit-plus,
+    % exponent-mode=scientific,
+    % table-format=1e1,
+    % print-zero-exponent=true, 
+    % print-unity-mantissa=false
+    }
+\DeclareSIUnit{\jansky}{Jy}
+\DeclareSIUnit{\MSPS}{MSPS}
+\DeclareSIUnit{\byte}{B}
+\DeclareSIUnit{\tecu}{TECu}
+\DeclareSIUnit{\bit}{bit}
+\DeclareSIUnit{\sample}{S}
+\DeclareSIUnit{\dmunit}{pc~cm^{-3}}
+\DeclareSIUnit{\millisec}{ms}
+\newcommand{\kkoname}{k'ni\textipa{P}atn k'l$\left._\mathrm{\smile}\right.$stk'masqt}
+\newcommand{\rmtec}{\mathrm{TEC}}
+%\usepackage[%
+%     colorlinks=true,
+%     urlcolor=blue,
+%     linkcolor=blue,
+%     citecolor=blue
+     %]{hyperref}
+
+\usepackage{cancel}
+%\usepackage{natbib}
+%\bibpunct{(}{)}{;}{a}{}{,}
+\usepackage{aas_macros}
+% \setcitestyle{square,numbers,comma,aysep={+}}
+
+\bibliographystyle{aasjournal}
+% \bibliographystyle{plainnat}
+
+\usepackage{amsmath, amssymb,commath}
+
+\newcommand{\corrname}{\texttt{PyFX}}
+\newcommand{\calc}{\texttt{calc}}
+\newcommand{\vlbivis}{\texttt{VLBIVis}}
+\newcommand{\sfxc}{\texttt{SFXC}}
+\newcommand{\difx}{\texttt{DiFX}}
+\newcommand{\difxcalc}{\texttt{difxcalc}}
+\newcommand{\caput}{\texttt{caput}}
+\newcommand{\nhat}{\widehat{\textbf{n}}}
+\newcommand{\hdf}{\texttt{hdf5}}
+\newcommand{\vdif}{\texttt{VDIF}}
+\newcommand{\bba}{\texttt{baseband\_analysis}}
+\newcommand{\coda}{\texttt{coda}}
+\newcommand{\kdm}{K_{\textrm{DM}}}
+\DeclareSIUnit{\parsec}{pc}
+\newcommand{\chimedatb}{\SI{19.3996}{\millisec}} % dispersive smearing over CHIME band
+\newcommand{\todo}[1]{{\color{red}$\blacksquare$~\textsf{[TODO: #1]}}}
+
+
+\received{\today}
+\revised{\today}
+\submitjournal{ApJ}
+\shorttitle{CHIME/FRB Outriggers VLBI Astrometry}
+\shortauthors{Andrew et al.}
+
+\begin{document}
+\title{CHIME/FRB Outriggers VLBI Astrometry}
+%\input{./plot_scripts/authorlist.tex}
+\collaboration{99}{(CHIME/FRB Collaboration)}
+
+\keywords{Radio astronomy(1338), Radio transient sources (2008), 
+Radio pulsars (1353), Astronomical instrumentation(799), 
+Very long baseline interferometry (1769), high energy astrophysics (739), Radio telescopes (1360)}
+
+\begin{abstract}
+In this work, we present an  
+\end{abstract}
+
+%1) Initial background,
+\section{Introduction}
+CHIME/FRB Outriggers is the first of several planned telescopes which will use triggered VLBI to pinpoint fast radio transients with high angular resolution. It represents an application of standard VLBI techniques  a relatively unexplored observational phase space. For instance, the large instantaneous field-of-view of observations implies large target-calibrator angular separations and that direction-dependent astrometric corrections may be necessary. The unique combination of detection telescopes which are efficient at low frequencies ($< 1$ GHz) and high angular resolution VLBI stations ($\gtrsim 1$ M$\lambda$), makes ionospheric effects uniquely important in low frequency astrometry. In addition, the transient nature of FRBs and the high event rate of CHIME ($\sim 100$ VLBI localizations/year) demands a well-calibrated astrometric systematic error model for rapid, surefire, and accurate FRB localization at the highest levels of precision.
+
+Here we use commissioning data from the first year of observations with CHIME/FRB Outriggers to study the astrometric uncertainties as a function of observational conditions under which FRBs may be detected. These include factors like burst correlation signal-to-noise (S/N), local RFI conditions at each station, signal bandwidth of both target and calibrator. We also explore direction dependent effects like position within the primary beam, target-calibrator angular offset, and ionospheric errors.
+
+\section{Observations}
+CHIME/FRB Outriggers has a large number of full-array baseband data snapshots -- triggered on single pulse detections of pulsars and FRBs -- which reach a depth of $\sim 500$ mJy over a field of view of $\sim 200$ deg$^2$. This often allows \textbf{2-10} astrometric calibrators from the RFC and VLBA calibrator catalogs~\citep{ma1998international,petrov2021wide} to be observed simultaneously as the FRB within the common field of view~\citep{andrew2024vlbi} of CHIME and its outriggers.
+
+\section{VLBI Localization Pipeline}
+We describe the current version of the localization pipeline used by CHIME/FRB Outriggers for full-array baseband observations -- originally described in [PYFX PAPER], now systematized and automated for the complete VLBI array. The basic workflow is as follows.
+
+Upon the successful capture of full-array baseband data at all stations and the interferometric localization at the CHIME core~\citep{michilli2021analysis}, we form station beams at each station -- the CHIME core as well as the outrigger stations -- toward a set of pointings which consist of each calibrator in the field of view, as well as the target.
+
+\subsection{Calibrator fringe finding}
+For pointings towards calibrators, the voltage data from each station is delay-compensated and integrated over the time duration of the baseband capture using PyFX CITE to find fringes on as many calibrators as possible. We calculate the spectral kurtosis [CITE] from the full array baseband data in each snapshot and find outliers above $m$ median absolute deviations to reject RFI, where $3 < m < 10$ is optimized to increase the S/N of the calibrator fringes.
+
+\subsection{Burst fringe finding}
+For the single target pointing, the voltage data from each station is delay-compensated, coherently dedispersed, and boxcar integrated around the burst profile. To optimize the S/N in the target pointing, this is done in a loop over trials at different time-of-arrivals, DMs, and frequency-independent burst widths. For each of these three trial parameters, fast visibilities are formed on each baseline for the full 400 MHz bandwidth. RFI flagging is performed by looking for spectral kurtosis flagger
+We search for fringes within the visibilities by performing an FFT and searching for peaks in the delay cross-correlation function, for the full band, as well as within each 100- and 200-MHz subband. 
+
+trials as a function of bandwidth (masking the low band, masking the mid-band, masking the high-band).
+
+to maximize the S/N as detected in VLBI.
+
+
+\subsection{Calibration and phase referencing}
+
+\subsection{RFI flagging}
+Spectral kurtosis flagging is calculated by PyFX during VLBI correlation in Deller 2014.
+
+\subsection{Flux Calibration}
+Establishing a compact flux scale at 600Mhz is nontrivial. Single-dish low frequency ($<$1GHz) fluxes (e.g. WENSS) for sources in our survey will be contaminated by extended emission, while compact flux measurements from the VLBA must be extrapolated downward by approximately an order of magnitude. This poses a challenge even for the LBCS, which derived a fitting formula for the flux of their sources by performing a cross-match to the VLBA calibrator catalogue and using the spectral index at GHz frequencies to extrapolate the flux to 110-190MHz.
+
+Nevertheless, we can estimate a rough flux scale for our data. CHIME and each Outrigger station are stand-alone interferometers that observes a bright continuum source daily to calibrate the amplitude and phase of the baseband data on a station by station basis (see CHIME Overview, Section 2.5 and \cite{kko_adam}, Section 2.6). Because all the stations are non-steerable, an additional correction of each station's beam response towards the direction of the VLBI target must also be applied in order to obtain a correlated flux measurement, as was done with CHIME baseband data in CHIME/FRB Catalog 1 \citep{basecat1}. However, while a primary beam model has been developed and validated with measurements of the Sun for CHIME's main lobe and is estimated to have a band-averaged uncertainty of $\sim 10\%$ \cite{CHIMEFRB_CAT1}, the beam response of GBO has never been directly measured. 
+
+In principle, because each of the Outriggers cylinders are rotated and rolled to share the same field of view, the CHIME beam should be very similar to beam response of each Outrigger station. This is qualitatively confirmed at least for the first Outrigger station KKO at a single declination, where KKO autocorrelation measurements over a single solar transit show an hour-angle dependent beam response closely resembling CHIME's \citep{kko_adam}. Hence, we choose to adopt the CHIME beam model to correct for the GBO beam, with a few caveats:
+
+First–since GBO is separated from CHIME by $>10º$ in latitude, we evaluate the CHIME beam model at the target's local GBO beam coordinates in the N-S direction. Second–we consider the possibility that the GBO beam response is offset in both the E-W and N-S direction relative to what we assume in our model in order to estimate a conservative uncertainty on our reported fluxes. An absolute offset of 0.25$^\circ$ and $10^\circ$ in the E-W and N-S direction, respectively, provides a band-averaged flux error of $\sim$50$\%$ when averaging the beam model over all pointings in CHIME's primary beam. Hence, we stress that the fluxes reported in our catalog are meant to provide an \emph{overall} flux scale for our survey, as the errors on a source-by-source basis can be quite high. We also note that because our survey is conducted on a single baseline, all our flux measurements are constrained to a single axis of the source. 
+
+The beamformed beam can be expressed as 
+\begin{equation}
+    B^{a}_\nu(t,\hat{n}) = b^{a}_\nu (\hat{n})\big(s_\nu(\hat{n},t)+n^{a}_\nu(t) \big)
+\end{equation}
+where $b^{a}_\nu$ is the beam response of station $a$ at frequency %$\nu$ towards sky position $\hat{n}$, $s_\nu(\hat{n},t)$ denotes the %signal at time $t$, and $n^{a}_\nu(t)$ denotes the noise. The cross %correlated visibilities then are
+\begin{equation}
+    |V_{\nu}^{a,b}(\hat{n})| = b^{a}_\nu (\hat{n})
+\end{equation}
+
+After applying the estimated beam correction, we measure the correlated flux as the peak amplitude of the cross-correlated visibilities after fourier transforming over frequency. The noise is measured as the standard deviation of the off-delay, which is added in quadrature with the beam error to provide the final reported flux uncertainty. 
+
+While in principle noise will contribute to the uncertainty in a correlated flux measurement, in practice our uncertainties are so overwhelmingly dominated by our beam model that we do not bother computing formal errors on our reported fluxes. 
+
+
+%We measure the correlated flux density 
+
+Assuming the noise to be uncorrelated with the signal, the true correlated flux of the source $F^{ij}_\nu(\hat{n})$ after correlating the station-calibrated baseband data at stations $i$ and $j$ at position $\hat{n}$ in the sky can be expressed as 
+\begin{equation}
+    |V^{ij}_\nu|=\sqrt{b^i_\nu(\hat{n})b^j_\nu(\hat{n})} \big(F^{ij}_{\nu}+N_{\nu}\big)
+\end{equation}
+where $|V^{ij}(\nu)|$ denotes the amplitude of the cross correlated visibilities at frequency $\nu$,  $b^i_\nu(\hat{n})$ denotes the beam response of telsecope $i$ at frequency $\nu$ towards direction $\hat{n}$. 
+
+
+
+%\todo{fix, include error on beam (assume cal is 20\% off}} The system equivalent flux density (SEFD) of CHIME and GBO are approximately 60Jy and 250Jy, respectively, at 600Mhz. The CHIME-GBO synthesized beam when coherently combined have an SEFD of $\sim$ 3.8Jy over the entire band, therefore our noise floor after integrating 100ms is approximately $\sim$ 19mJy.  
+
+%Since these are the brightest sources in the sky, and since there are not many sources to statistically establish a flux scale, we quote a ``radiometer-equivalent'' flux using the beam model and the GBO \& CHIME SEFD measurements. This may actually be an underestimate because of an effective increase in the system temperature caused by non-compact flux.
+
+
+\subsection{Polarimetry}
+
+\subsection{Visibility errors}
+Not propagated. Doesn't matter
+
+\section{Astrometric performance}
+
+
+Delay not angular offset.
+1) astrometric accuracy vs S/N: 100 continuum or pulsar sources test localizations for each baseline
+
+2) offset for artificially narrowband (400-600, 400-500, 500-600, 600-700, 700-800, 600-800 MHz) vs offset for the full band. GBO, HCO, KKO 100 test localizations of continuum sources each. 
+
+%3) For repeaters, see how offset averages down 
+
+%3) offset for S/N maximizing calibrator versus offset for nearest calibrator for each baseline. 100 targets for each baseline. 
+
+4) S/N unreferenced vs S/N referenced to the signal maximizing calibrator for each baseline.  100 for each baseline.
+
+
+%5) NCP-Crab loc or NCP-B0329 loc offset versus impact parameter to the sun for GBO and HCO (test for extreme ionosphere effects).  GBO HCO,  5 in each bin of impact parameter, probably 15-50 sources. Cite KKO paper to explain why ionosphere is not needed
+
+6) Error budgeting procedure (error is based on bandwidth/snr/ionosphere prior). In both cases, show normalized error distribution for pulsars (or calibrators if not enough pulsars) (x 100-200) 
+
+
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\linewidth]{figs/localization_1.pdf}
+    \caption{Plot of localization error as a function of signal to noise}     \label{fig:loc1}
+\end{figure*}
+
+
+\subsection{Signal to noise and bandwidth}
+% what CHIME signal to noise is each baseline sensitive to? What flux does that correspond to
+
+
+
+
+
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\linewidth]{figs/localization_2.pdf}
+    \caption{Plot of localization error as a function of signal to noise for bottom half of band, top half, middle half. Compare to naiive theoretical value (no ionosphere) and with ionosphere}   
+    \label{fig:locbw}
+\end{figure*}
+
+
+\subsection{Calibrator target separation}
+
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\linewidth]{figs/localization_3.pdf}
+    \caption{Residual phase/delay as a function of position on sky and cal-tar separation}   
+    \label{fig:locbw}
+\end{figure*}
+\subsubsection{Beam calibration}
+\subsubsection{Ionosphere calibration}
+
+\subsection{Final error budgeting}
+
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\linewidth]{figs/localization_3.pdf}
+    \caption{Localization error normalized by uncertainty}   
+    \label{fig:locbw}
+\end{figure*}
+
+\section{Discussion, Future Work, and Conclusion}
+
+\section{Acknowledments}
+%\allacks
+\appendix
+%\input{appendix_data_format}
+\onecolumngrid
+
+
+\bibliography{references}{}
+
+\bibliographystyle{aasjournal}
+\end{document}

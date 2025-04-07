@@ -1,0 +1,39 @@
+Systematic phase shifts from the instrument, the clock, and the ionosphere must be removed from the visibilities in order to measure a position from the geometric delay. This is traditionally achieved by rapidly switching between the source of interest and a calibrator whose position is known \textit{a priori}, and applying phase referencing \citep{beasley1995vlbi}. Phase referencing is a standard VLBI technique in which a calibrator source close to the target source is used to remove
+instrumental, atmospheric, and ionospheric phase contributions. 
+
+A calibrator sufficiently close in hour angle and close in time will have systematic errors covariant with those of the target. Since our targets are uniformly distributed over the sky (see e.g.~\citep{josephy2021no}), the most straightforward calibration strategy is to have a network of compact calibrators with precisely-determined positions distributed densely over the sky. The LOFAR Long-Baseline Calibrator Survey (LBCS) has recently identified bright VLBI calibrators at an average density of one source per square degree that are compact on a 200-300km baseline at frequencies around 110-190MHz~\citep{mold_on2015lofar,jackson2022sub,morabito2022sub}. The success of the LBCS at identifying a high density of usable calibrators indicates that such calibrators may be similarly available at the frequencies (\SIrange{400}{800}{\mega\hertz}) and baseline lengths (\SIrange{65}{3300}{\kilo\meter}) relevant for CHIME/FRB Outriggers. 
+
+To establish a list of calibrators, a wide-field survey is currently underway to identify suitable LOFAR calibrators visible by CHIME/FRB Outriggers. At any given moment, thousands of LOFAR calibrators are within CHIME's 200 square-degree primary beam, and these can be efficiently observed by dumping full-array baseband which contains the entire field of view.~\corrname supports multiple pointings per dataset (sometimes called ``multiple phase centers'') at
+both the beamformer and the VLBI correlation level, and can be run in parallel over either axis. In the case of this
+calibrator survey, we use multiple phase centers in the beamformer to efficiently form synthesized beams towards the position of each LOFAR source. Since on average the CHIME synthesized beamwidth (\SI{1}{\arcmin}) is smaller than the separation between calibrators (\SI{\sim1}{\degree}), we run~\corrname in parallel over beamformer positions, creating a single correlator pointing per synthesized beam pointing to search for calibrators. The results of the survey establishing this calibrator network will be presented in future work.
+
+In the long run, establishing the calibrator network will open up the sub-GHz compact sky: an underexplored frequency range between that of LOFAR and the VLBA wide-field calibrator survey (WCS;~\citep{petrov2021wide}). However, in the medium term where calibrators remain sparse or unknown, we may leverage other techniques to remove unwanted systematic phase shifts using our understanding of the instrument. In addition to a spatially-varying beam phase from the telescope optics, which do not have a simple functional form over the band, we need to remove contributions from static cable delays, the clocks at each station, and the spatially- and temporally-variable ionosphere.
+
+Instrumental/beam phases and delays are removed using the fact that they remain static for weeks at the nanosecond level; characterization of the CHIME beam indicates that the beam response of the cylinder has an oscillatory frequency dependence on scales of \SI{30}{\mega\hertz} from the standing wave induced between the feed and CHIME's parabolic reflector. Using VLBI between CHIME and KKO, we can probe the differential beam phase between these stations. A similar characteristic ripple on
+$\SI{30}{\mega\hertz}$ scales (see lower half of the band shown in Fig.~\ref{fig:ncp_source}), can easily be observed.
+
+We also need to calibrate out clock jitter on timescales shorter than the interval between calibrator and target observations. We have demonstrated the ability to do that cleanly on $\approx \SI{0.2}{\nano\second}$ precision on $\sim \SI{1000}{\second}$ timescales~\citep{cary2021evaluating,mena_parra2022clock}. Measurements on the CHIME-KKO baseline on the NCP Source show that the clock stabilization method stabilizes the
+timing of that baseline to the \SI{1}{\nano\second} level over a timespan of 24 hours, which allows the VLBI delays and rates to be calibrated at a similar (daily) cadence on this baseline. 
+
+Finally, we need to separate the spatially- and temporally-varying ionosphere from the other two contributions. We use the characteristic functional form $\varphi \propto 1/\nu$ of the ionosphere: this allows separation from the beam phase (an oscillatory \SI{30}{\mega\hertz} ripple). Separation from the clock is achieved by using our large fractional bandwidth to directly measure the $1/\nu$ ionospheric phase shift in each observation. Our ability to do this is given by our ability to measure the fringe ``curvature'' arising from the $1/\nu$ dependence as a function of frequency. The ionosphere signal is the quadratic term in
+\begin{equation} 
+    \varphi_\mathrm{iono} = \dfrac{\kappa \rmtec}{f} \approx \dfrac{\kappa \rmtec}{\nu_c} - \underbrace{\dfrac{\kappa \rmtec\Delta \nu}{\nu_c^2}}_\mathrm{degenerate} + \underbrace{\dfrac{\kappa\rmtec\Delta \nu^2}{\nu_c^3}}_{\mathrm{ionospheric~curvature!}} \ldots
+\end{equation} 
+where we have Taylor expanded in $\Delta \nu$ about $\nu_c$, the central frequency of the telescope, and where $\kappa = \SI{1.3442633e-7}{\meter^2\second^{-1}}$. The quadratic term is the first term in the Taylor expansion that is not degenerate with e.g. sky location or non-dispersive delays. One figure of merit quantifying the precision with which we can measure the ionosphere is given in Eq.~\ref{eq:iono_fom}:
+\begin{widetext}
+\begin{equation} 
+\dfrac{\Delta\rmtec}{\Delta\varphi} = \dfrac{\nu_c^3}{\kappa \Delta \nu^2} = \begin{cases}
+\SI{36.91}{\tecu / \radian} & \text{VLBA at \SIrange{1410}{1680}{\mega\hertz}~\citep{wayth2011v}} \\
+\SI{29.9}{\tecu / \radian} & \text{EVN (Effelsberg) \SIrange{1254}{1510}{\mega\hertz}~\citep{nimmo2022milliarcsecond}} \\ % Google: (1382^3 MHz / 256^2) / (1.3442633e-7 m^2 / s) / (1e16 meters^-2)
+\SI{1.004}{\tecu / \radian} & \text{CHIME at \SIrange{400}{800}{\mega\hertz}~\citep{collaboration2019observations}} \\ % Google: (600^3 MHz / 400^2) / (1.3442633e-7 m^2 / s) / (1e16 meters^-2)
+\SI{0.42}{\tecu / \radian} & \text{LOFAR HBA (\SIrange{110}{185}{\mega\hertz})~\citep{pleunis2021lofar}} % Google: (147.5^3 MHz / 75^2) / (1.3442633e-7 m^2 / s) / (1e16 meters^-2)
+\end{cases}
+    \label{eq:iono_fom}
+\end{equation}
+\end{widetext}
+
+For a fixed brightness per unit bandwidth, this implies that wide-band, low-frequency instruments such as LOFAR -- and potentially CHIME -- may have the frequency coverage necessary to ``self-calibrate'' the directional dependence of the ionosphere with the observation of an FRB. Whether this pans out depends on the characteristic phase residual $\Delta \varphi$ over the band, which can be dominated by systematics (e.g. uncalibrated beam phases or polarization leakage) or statistical errors. If it is limited by systematic errors, then adding bandwidth does not help, but if it is limited by statistical errors, then using many channels over the band helps to ``centroid'' the average phase residual $\Delta \varphi$, and precision improves as
+\begin{equation}
+    \Delta\varphi \propto \dfrac{1}{S/N_\mathrm{chan} \sqrt{N_\mathrm{chan}}} \propto \Delta \nu^{-1/2}
+\end{equation}
+where $\sqrt{N_\mathrm{chan}}$ is the number of channels and S/$N_\mathrm{chan}$ is the signal-to-noise ratio in that channel.
