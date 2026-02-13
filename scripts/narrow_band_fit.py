@@ -1,3 +1,4 @@
+import pandas
 from coda.core import VLBIVis
 from glob import glob
 import re
@@ -39,6 +40,28 @@ from outriggers_vlbi_pipeline.calibration import create_calibrated_visibilities,
 import coda
 
 
+df_ref=pandas.read_csv('/arc/home/shiona/iri_April13.csv')
+from scipy.stats import t
+
+def get_prior(gps_tec,scale=0.9):
+    def prior_pdf(tec_vals):
+        return t.pdf(tec_vals, df=1, loc=gps_tec, scale=scale)
+    return prior_pdf
+
+#nu: 2.214263583065715
+#-0.20509773140475696
+#s: 0.9019212776533722
+
+#nu: 2.100585293477786
+#0.31347833479016707
+#s: 0.7934553981783774
+
+def get_dstec(event_id,name,calibrator_name):
+    dfx=df_ref[df_ref['event_id']==event_id]
+    dftar=dfx[dfx['name']==calibrator_name].reset_index(drop=True)
+    dfcal=dfx[dfx['name']==name].reset_index(drop=True)
+    dstec=(dftar[f'dstec_iri_{tel}'][0]-dfcal[f'dstec_iri_{tel}'][0])
+    return dstec
 
 if __name__=='__main__': 
     import argparse
@@ -48,77 +71,45 @@ if __name__=='__main__':
     tel=cmdargs.tel
 
     print(tel)
-    fmin=400
-    fmax=600
 
     if tel=='kko':
-        tec_grid=np.arange(-5,5,.1)
+        tec_grid=np.arange(-2,2,.1)
     else:
-        tec_grid=np.arange(-40,40,.1)
+        tec_grid=np.arange(-30,30,.1)
 
     baseline_name=f'chime-{tel}'
     valid_keys=['chime',baseline_name,'index_map',tel]
     import re
     import time
     inputtag=f'M22_true_pos_fit_{tel}'
-    if tel=='hco':
-        inputtag=f'M22_true_pos_fit_hco_MASK_RFI'
-    calibrated_files=glob(f'/arc/projects/chime_frb/vlbi/OVP_astrometry_{tel}/{inputtag}/*/calibrated/*')
-    print(len(calibrated_files))
-    calibrated_files=glob(f'/arc/projects/chime_frb/vlbi/OVP_astrometry_{tel}/{inputtag}/*/calibrated/*')
-    print(len(calibrated_files))
-    for i,file in enumerate(calibrated_files):
-        print(i)
-        new_file = file.replace("calibrated", f"calibrated_bw_{fmin}_{fmax}_masked")
-        print(new_file)
-        if len(glob(new_file))==0:
-            os.makedirs(os.path.dirname(new_file), exist_ok=True)
-            vis=VLBIVis.from_file(file)
-            mask=np.where((vis.freqs>fmin)&(vis.freqs<fmax))
-            vis[f'chime-{tel}']['vis'][mask]=0.0
-            event_id=vis.event_id
-            fringefit(vis[f'chime-{tel}'],tec_grid=tec_grid)
-            vis.save(new_file)
+    #if tel=='hco':
+    #    inputtag=f'M22_true_pos_fit_hco_MASK_RFI'
 
-
-
-    fmin=600
-    fmax=800
-
-    calibrated_files=glob(f'/arc/projects/chime_frb/vlbi/OVP_astrometry_{tel}/{inputtag}/*/calibrated/*')
-    print(len(calibrated_files))
-    for i,file in enumerate(calibrated_files):
-        print(i)
-        new_file = file.replace("calibrated", f"calibrated_bw_{fmin}_{fmax}_masked")
-        print(new_file)
-        if len(glob(new_file))==0:
-            os.makedirs(os.path.dirname(new_file), exist_ok=True)
-            vis=VLBIVis.from_file(file)
-            mask=np.where((vis.freqs>fmin)&(vis.freqs<fmax))
-            vis[f'chime-{tel}']['vis'][mask]=0.0
-            event_id=vis.event_id
-            fringefit(vis[f'chime-{tel}'],tec_grid=tec_grid)
-            vis.save(new_file)
-
-
-
-
-
-    fmin=500
-    fmax=700
-
-    calibrated_files=glob(f'/arc/projects/chime_frb/vlbi/OVP_astrometry_{tel}/{inputtag}/*/calibrated/*')
-    print(len(calibrated_files))
-    for i,file in enumerate(calibrated_files):
-        print(i)
-        new_file = file.replace("calibrated", f"calibrated_bw_{fmin}_{fmax}_masked")
-        print(new_file)
-        if len(glob(new_file))==0:
-            os.makedirs(os.path.dirname(new_file), exist_ok=True)
-            vis=VLBIVis.from_file(file)
-            mask=np.where((vis.freqs>fmin)&(vis.freqs<fmax))
-            vis[f'chime-{tel}']['vis'][mask]=0.0
-            event_id=vis.event_id
-            fringefit(vis[f'chime-{tel}'],tec_grid=tec_grid)
-            vis.save(new_file)
+    scales=[0.1]#,0.5]
+    for scale in scales:
+        tag='_scale_' + str(scale)
+        fmins=[400]#,600,400,500]
+        fmaxs=[400]#,800,600,800]
+        for i in range(len(fmins)):
+            fmin=fmins[i]
+            fmax=fmaxs[i]
+            calibrated_files=glob(f'/arc/projects/chime_frb/vlbi/OVP_astrometry_{tel}/{inputtag}/*/calibrated/*')
+            print(len(calibrated_files))
+            for i,file in enumerate(calibrated_files):
+                print(i)
+                new_file = file.replace("calibrated", f"calibrated_bw_{fmin}_{fmax}_masked")
+                print(new_file)
+                if len(glob(new_file))==0:
+                    os.makedirs(os.path.dirname(new_file), exist_ok=True)
+                    vis=VLBIVis.from_file(file)
+                    mask=np.where((vis.freqs>fmin)&(vis.freqs<fmax))
+                    vis[f'chime-{tel}']['vis'][mask]=0.0
+                    event_id=vis.event_id
+                    if False:#tel!='kko':
+                        gps_tec=get_dstec(event_id,vis.source_name[0].astype(str),vis[f'chime-{tel}']['calibrator_source_name'][0].astype(str))
+                        prior=get_prior(gps_tec=gps_tec,scale=scale)
+                        tec_grid=np.arange(-5,5,.1)+gps_tec
+                        fringefit(vis[f'chime-{tel}'],tec_grid=tec_grid,prior=prior,tag=tag)
+                    fringefit(vis[f'chime-{tel}'],tec_grid=tec_grid,tag=tag)
+                    vis.save(new_file)
 

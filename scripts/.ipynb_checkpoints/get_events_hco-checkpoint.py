@@ -44,7 +44,7 @@ cal_df=get_calibrator_dataframe()
 MASK_RFI=False
 tel='hco'
 if tel=='hco':
-    MASK_RFI=True
+    MASK_RFI=False
 
 if tel=='kko':
     tec_grid=np.array([0])
@@ -66,7 +66,7 @@ final_events_to_use=[]
 configs=[]
 events_to_redo=[]
 for event_id in event_ids_to_use:
-    files=glob(f'/arc/projects/chime_frb/vlbi/hco_comissioning_rfi/*/*/*/{event_id}/calibrator_visibilities/*')
+    files=glob(f'/arc/projects/chime_frb/vlbi/hco_comissioning2/*/*/*/{event_id}/calibrator_visibilities/*')
     if True:
         if len(files)>0:
             vis=VLBIVis.from_file(files[0])
@@ -76,7 +76,7 @@ for event_id in event_ids_to_use:
                     events_to_redo.append(event_id)
                 else:
                     final_events_to_use.append(event_id)
-                    configs.append('hco_comissioning_rfi')
+                    configs.append('hco_comissioning2')
             else:
                 events_to_redo.append(event_id)
         else:
@@ -87,7 +87,7 @@ df_redo.to_csv(f'{tel}_redo_events.csv',index=False)
 ## phase reference everything to brightest cal in dump
 baseline_name=f'chime-{tel}'
 valid_keys=['chime',baseline_name,'index_map',tel]
-tag=f'M22_true_pos_fit_{tel}_KL_filter'
+tag=f'M22_true_pos_fit_{tel}'
 if MASK_RFI:
     tag+='_MASK_RFI'
 import re

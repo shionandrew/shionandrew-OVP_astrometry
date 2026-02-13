@@ -1,0 +1,5 @@
+import outriggers_vlbi_pipeline.vlbi_pipeline_config as config
+from outriggers_vlbi_pipeline.calibrator_search.find_fringes import search_calibrator_visibilities,get_all_event_ids,update_main_db
+config.VERSION='hco_comissioning2'
+search_calibrator_visibilities(1112345804,tel2='gbo')
+search_calibrator_visibilities(1112345804,tel2='hco')

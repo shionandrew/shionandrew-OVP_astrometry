@@ -39,12 +39,37 @@ from outriggers_vlbi_pipeline.calibration import create_calibrated_visibilities,
 import coda
 import pandas
 
+
+
+best_fit_params=[-2523649.92736954,-4123697.10433308,4147773.43142168]#[-2523643.44047669,-4123699.84440233 ,4147774.23913098]
+#### NEW POSITION, as of June ###### 
+new_hco = ac.EarthLocation.from_geocentric(
+    x = (best_fit_params[0]) * un.m,  
+    y = (best_fit_params[1]) * un.m,  
+    z = (best_fit_params[2]) * un.m  
+)
+new_hco.info.name = 'hco'
+
+hco=new_hco
+
+####################################
+#### NEW POSITION, as of June ###### 
+####################################
+new_best_fit_params=[883729.31850621,-4924463.81125919,3943956.82880664]#[ 883728.02446502, -4924463.3225994 ,  3943957.56097847]
+new_gbo = ac.EarthLocation.from_geocentric(
+    x = (new_best_fit_params[0]) * un.m,  
+    y = (new_best_fit_params[1]) * un.m,  
+    z = (new_best_fit_params[2]) * un.m  
+)
+new_gbo.info.name = 'gbo'
+gbo=new_gbo
+
 cal_df=get_calibrator_dataframe()
 
 MASK_RFI=False
 tel='hco'
 if tel=='hco':
-    MASK_RFI=True
+    MASK_RFI=False
 
 if tel=='kko':
     tec_grid=np.array([0])
@@ -66,17 +91,18 @@ final_events_to_use=[]
 configs=[]
 events_to_redo=[]
 for event_id in event_ids_to_use:
-    files=glob(f'/arc/projects/chime_frb/vlbi/hco_comissioning_rfi/*/*/*/{event_id}/calibrator_visibilities/*')
+    files=glob(f'/arc/projects/chime_frb/vlbi/hco_comissioning_bl/*/*/*/{event_id}/calibrator_visibilities/*')
     if True:
         if len(files)>0:
             vis=VLBIVis.from_file(files[0])
             if f'chime-{tel}' in vis.keys():
                 hco_position=coda.core.baseline.tels_to_astropy(vis['hco']['auto'].attrs['station'])
                 if hco_position!=hco:
+                    print(event_id)
                     events_to_redo.append(event_id)
                 else:
                     final_events_to_use.append(event_id)
-                    configs.append('hco_comissioning_rfi')
+                    configs.append('hco_comissioning_bl')
             else:
                 events_to_redo.append(event_id)
         else:
@@ -87,7 +113,7 @@ df_redo.to_csv(f'{tel}_redo_events.csv',index=False)
 ## phase reference everything to brightest cal in dump
 baseline_name=f'chime-{tel}'
 valid_keys=['chime',baseline_name,'index_map',tel]
-tag=f'M22_true_pos_fit_{tel}_KL_filter'
+tag=f'M22_true_pos_fit_{tel}'
 if MASK_RFI:
     tag+='_MASK_RFI'
 import re
